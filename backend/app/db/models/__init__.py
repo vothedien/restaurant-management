@@ -1,0 +1,70 @@
+"""Import every mapped model so Alembic receives complete metadata."""
+
+from app.db.models.catalog import (
+    DiningTable,
+    Dish,
+    Ingredient,
+    MenuCategory,
+    RecipeItem,
+    RecipeVersion,
+    Unit,
+    UnitConversion,
+)
+from app.db.models.forecasting import (
+    ForecastResult,
+    ForecastRun,
+    ModelMetric,
+    ModelVersion,
+    ReplenishmentProposal,
+    ReplenishmentProposalItem,
+)
+from app.db.models.inventory import (
+    GoodsReceipt,
+    GoodsReceiptItem,
+    PurchaseOrder,
+    PurchaseOrderItem,
+    StockLot,
+    StockMovement,
+    Stocktake,
+    StocktakeItem,
+    Supplier,
+    SupplierIngredient,
+)
+from app.db.models.rbac import AuditLog, Permission, Role, RolePermission, User, UserRole
+from app.db.models.sales import Order, OrderItem, Payment
+
+__all__ = [
+    "AuditLog",
+    "DiningTable",
+    "Dish",
+    "ForecastResult",
+    "ForecastRun",
+    "GoodsReceipt",
+    "GoodsReceiptItem",
+    "Ingredient",
+    "MenuCategory",
+    "ModelMetric",
+    "ModelVersion",
+    "Order",
+    "OrderItem",
+    "Payment",
+    "Permission",
+    "PurchaseOrder",
+    "PurchaseOrderItem",
+    "RecipeItem",
+    "RecipeVersion",
+    "ReplenishmentProposal",
+    "ReplenishmentProposalItem",
+    "Role",
+    "RolePermission",
+    "StockLot",
+    "StockMovement",
+    "Stocktake",
+    "StocktakeItem",
+    "Supplier",
+    "SupplierIngredient",
+    "Unit",
+    "UnitConversion",
+    "User",
+    "UserRole",
+]
