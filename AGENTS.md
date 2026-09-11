@@ -1,32 +1,18 @@
 # Code ownership
 
-## Person 1 — Inventory
+## Person 1 — Sales App
 
-- `backend/app/modules/inventory`
-- `backend/app/modules/purchasing`
-- `backend/app/modules/forecasting`
-- `frontend/src/features/inventory`
-- Inventory and forecasting models
-
-## Person 2 — Sales App
-
-- `backend/app/modules/auth`
-- `backend/app/modules/catalog`
-- `backend/app/modules/sales`
-- `frontend/src/features/auth`
-- `frontend/src/features/sales`
+- `backend/app/modules/auth`, `backend/app/modules/catalog`, and `backend/app/modules/sales`
 - RBAC, catalog, and sales models
+- `frontend/src/features/auth` and `frontend/src/features/sales`
+- Shared frontend layout, router, and sidebar
 
-## Shared code
+## Person 2 — Inventory
 
-- `backend/app/core`
-- `backend/app/db/session.py`
-- `backend/app/api`
-- `frontend/src/api`
-- `frontend/src/components`
-- `database`
-- Alembic configuration
+- Database models, Alembic, migrations, and backend integration
+- `backend/app/modules/inventory`, `backend/app/modules/purchasing`, `backend/app/modules/forecasting`, and recipes
+- `frontend/src/features/inventory` and purchasing features
 
-Change shared code only after both contributors agree. One person owns migrations and is the only person permitted to run them against Neon.
+Person 2 is the only contributor permitted to manage or run migrations against Neon. AI model training and evaluation are shared future work.
 
-Do not push directly to `main`. Use `develop`, `feature/inventory`, and `feature/sales-app`; merge to `develop` through a Pull Request.
+Do not push directly to `main`. Develop each feature on its own branch and merge to `develop` through a Pull Request.

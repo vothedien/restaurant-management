@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -8,8 +9,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.router import api_router
 from app.core.config import get_settings
-from app.core.exceptions import DatabaseNotConfiguredError
-from app.core.responses import success_response
+from app.core.exceptions import ApplicationError, DatabaseNotConfiguredError
+from app.core.responses import error_response, success_response
 from app.db.session import get_engine
 
 
@@ -30,13 +31,28 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.exception_handler(ApplicationError)
+    async def application_error_handler(_: Request, error: ApplicationError) -> JSONResponse:
+        return JSONResponse(status_code=error.status_code, content=error_response(error.message))
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_error_handler(
+        _: Request, __: RequestValidationError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content=error_response("Request validation failed"))
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(_: Request, error: HTTPException) -> JSONResponse:
+        message = error.detail if isinstance(error.detail, str) else "Request failed"
+        return JSONResponse(status_code=error.status_code, content=error_response(message))
+
     @app.exception_handler(DatabaseNotConfiguredError)
     async def database_not_configured_handler(
         _: Request, __: DatabaseNotConfiguredError
     ) -> JSONResponse:
         return JSONResponse(
             status_code=503,
-            content={"success": False, "message": "Database is not configured", "data": None},
+            content=error_response("Database is not configured"),
         )
 
     @app.get("/health", tags=["health"])
@@ -65,26 +81,18 @@ def create_app() -> FastAPI:
         except DatabaseNotConfiguredError:
             return JSONResponse(
                 status_code=503,
-                content={"success": False, "message": "Database is not configured", "data": None},
+                content=error_response("Database is not configured"),
             )
         except SQLAlchemyError:
             return JSONResponse(
                 status_code=503,
-                content={
-                    "success": False,
-                    "message": "Database connection is unavailable",
-                    "data": None,
-                },
+                content=error_response("Database connection is unavailable"),
             )
 
         if not schema_exists:
             return JSONResponse(
                 status_code=503,
-                content={
-                    "success": False,
-                    "message": "Database schema is unavailable",
-                    "data": None,
-                },
+                content=error_response("Database schema is unavailable"),
             )
 
         return JSONResponse(
