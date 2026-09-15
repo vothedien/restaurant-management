@@ -1,10 +1,35 @@
-from sqlalchemy import func, or_, select
+from sqlalchemy import exists, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.db.models.catalog import Ingredient, Unit, UnitConversion
+from app.db.models.catalog import Ingredient, RecipeItem, Unit, UnitConversion
+from app.db.models.inventory import StockLot, StockMovement, SupplierIngredient
 
 
 class InventoryRepository:
+    @staticmethod
+    def lock_ingredient(session: Session, ingredient_id: int) -> Ingredient | None:
+        return session.scalar(
+            select(Ingredient)
+            .where(Ingredient.ingredient_id == ingredient_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+
+    @staticmethod
+    def has_quantity_references(session: Session, ingredient_id: int) -> bool:
+        return bool(
+            session.scalar(
+                select(
+                    or_(
+                        *[
+                            exists().where(model.ingredient_id == ingredient_id)
+                            for model in (RecipeItem, SupplierIngredient, StockLot, StockMovement)
+                        ]
+                    )
+                )
+            )
+        )
+
     def list_units(
         self, session: Session, *, limit: int, offset: int, search: str | None
     ) -> tuple[list[Unit], int]:

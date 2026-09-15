@@ -22,8 +22,12 @@ from app.modules.inventory.schemas import (
     UnitUpdate,
 )
 from app.modules.inventory.service import InventoryService
+from app.modules.inventory.stock_router import router as stock_router
+from app.modules.inventory.stocktake_router import router as stocktake_router
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
+router.include_router(stock_router)
+router.include_router(stocktake_router)
 service = InventoryService()
 
 

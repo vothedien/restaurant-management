@@ -386,7 +386,8 @@ class StockMovement(Base):
     )
 
     stock_movement_id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    movement_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    # Source DDL has no unique constraint here; idempotency uses source-row locks.
+    movement_number: Mapped[str] = mapped_column(String(50), nullable=False)
     ingredient_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("restaurant_ai.ingredients.ingredient_id", ondelete="RESTRICT"),
