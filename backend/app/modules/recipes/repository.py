@@ -113,6 +113,9 @@ class RecipesRepository:
                 select(Ingredient)
                 .options(joinedload(Ingredient.base_unit))
                 .where(Ingredient.ingredient_id.in_(ingredient_ids))
+                .order_by(Ingredient.ingredient_id)
+                .with_for_update(of=Ingredient)
+                .execution_options(populate_existing=True)
             )
         }
 

@@ -8,12 +8,14 @@ from app.db.models.catalog import Ingredient, Unit, UnitConversion
 from app.modules.inventory.repository import InventoryRepository
 from app.modules.inventory.schemas import (
     IngredientCreate,
+    IngredientRead,
     IngredientUpdate,
     UnitConversionCreate,
     UnitConversionUpdate,
     UnitCreate,
     UnitUpdate,
 )
+from app.modules.inventory.stock_common import transaction
 
 
 class InventoryService:
@@ -46,6 +48,8 @@ class InventoryService:
     def update_unit(self, session: Session, unit_id: int, data: UnitUpdate) -> Unit:
         unit = self.get_unit(session, unit_id)
         changes = data.model_dump(exclude_unset=True)
+        if "dimension" in changes and changes["dimension"] != unit.dimension:
+            raise ConflictError("Unit dimension is immutable; create a new unit instead")
         unit_code = changes.get("unit_code")
         if unit_code and unit_code != unit.unit_code:
             existing = self.repository.get_unit_by_code(session, unit_code)
@@ -155,21 +159,33 @@ class InventoryService:
 
     def update_ingredient(
         self, session: Session, ingredient_id: int, data: IngredientUpdate
-    ) -> Ingredient:
-        ingredient = self.get_ingredient(session, ingredient_id)
-        changes = data.model_dump(exclude_unset=True)
-        ingredient_code = changes.get("ingredient_code")
-        if ingredient_code and ingredient_code != ingredient.ingredient_code:
-            existing = self.repository.get_ingredient_by_code(session, ingredient_code)
-            if existing and existing.ingredient_id != ingredient_id:
-                raise ConflictError("Ingredient code already exists")
-        base_unit_id = changes.get("base_unit_id", ingredient.base_unit_id)
-        self._require_active_unit(session, base_unit_id, "Base unit")
-        for field, value in changes.items():
-            setattr(ingredient, field, value)
-        ingredient.updated_at = datetime.now(UTC)
-        self._save(session, ingredient, "Ingredient code already exists")
-        return self.get_ingredient(session, ingredient_id)
+    ) -> IngredientRead:
+        with transaction(session):
+            ingredient = self.repository.lock_ingredient(session, ingredient_id)
+            if ingredient is None:
+                raise NotFoundError("Ingredient not found")
+            changes = data.model_dump(exclude_unset=True)
+            ingredient_code = changes.get("ingredient_code")
+            if ingredient_code and ingredient_code != ingredient.ingredient_code:
+                existing = self.repository.get_ingredient_by_code(session, ingredient_code)
+                if existing and existing.ingredient_id != ingredient_id:
+                    raise ConflictError("Ingredient code already exists")
+            base_unit_id = changes.get("base_unit_id", ingredient.base_unit_id)
+            base_unit = self._require_active_unit(session, base_unit_id, "Base unit")
+            if base_unit_id != ingredient.base_unit_id and self.repository.has_quantity_references(
+                session, ingredient_id
+            ):
+                raise ConflictError(
+                    "Base unit cannot change after recipes, supplier mappings "
+                    "or stock history reference this ingredient"
+                )
+            for field, value in changes.items():
+                setattr(ingredient, field, value)
+            ingredient.base_unit = base_unit
+            ingredient.updated_at = datetime.now(UTC)
+            session.flush()
+            result = IngredientRead.model_validate(ingredient)
+        return result
 
     def deactivate_ingredient(self, session: Session, ingredient_id: int) -> Ingredient:
         ingredient = self.get_ingredient(session, ingredient_id)

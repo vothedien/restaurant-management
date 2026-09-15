@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.core.responses import success_response
 from app.db.session import get_db
+from app.modules.purchasing.order_router import router as order_router
+from app.modules.purchasing.receipt_router import router as receipt_router
 from app.modules.purchasing.schemas import (
     MAX_BIGINT,
     SupplierCreate,
@@ -18,6 +20,8 @@ from app.modules.purchasing.schemas import (
 from app.modules.purchasing.service import PurchasingService
 
 router = APIRouter(prefix="/purchasing", tags=["purchasing"])
+router.include_router(order_router)
+router.include_router(receipt_router)
 service = PurchasingService()
 
 ResourceId = Annotated[int, Path(gt=0, le=MAX_BIGINT)]
