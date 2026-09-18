@@ -6,6 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.core.responses import success_response
 from app.db.session import get_db
+from app.modules.inventory_auth.dependencies import (
+    InventoryActor,
+    require_inventory_permission,
+)
+from app.modules.inventory_auth.service import PURCHASE_READ_PERMISSIONS
 from app.modules.purchasing.receipt_schemas import GoodsReceiptCreate, ReceiptStatus
 from app.modules.purchasing.receipt_service import GoodsReceiptService
 from app.modules.purchasing.schemas import MAX_BIGINT
@@ -16,13 +21,18 @@ Db = Annotated[Session, Depends(get_db)]
 ReceiptId = Annotated[int, Path(gt=0, le=MAX_BIGINT)]
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
-def create_receipt(data: GoodsReceiptCreate, session: Db) -> dict:
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
+def create_receipt(data: GoodsReceiptCreate, session: Db, actor: InventoryActor) -> dict:
+    data = data.model_copy(update={"received_by": actor.user_id})
     result = service.create(session, data)
     return success_response("Goods receipt created", result.model_dump(mode="json"))
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(require_inventory_permission(*PURCHASE_READ_PERMISSIONS))])
 def list_receipts(
     session: Db,
     purchase_order_id: int | None = Query(default=None, gt=0, le=MAX_BIGINT),
@@ -52,7 +62,10 @@ def list_receipts(
     )
 
 
-@router.get("/{receipt_id}")
+@router.get(
+    "/{receipt_id}",
+    dependencies=[Depends(require_inventory_permission(*PURCHASE_READ_PERMISSIONS))],
+)
 def get_receipt(receipt_id: ReceiptId, session: Db) -> dict:
     return success_response(
         "Goods receipt retrieved",
@@ -63,13 +76,18 @@ def get_receipt(receipt_id: ReceiptId, session: Db) -> dict:
     )
 
 
-@router.post("/{receipt_id}/confirm")
-def confirm_receipt(receipt_id: ReceiptId, session: Db) -> dict:
-    result = service.confirm(session, receipt_id)
+@router.post(
+    "/{receipt_id}/confirm",
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
+def confirm_receipt(receipt_id: ReceiptId, session: Db, actor: InventoryActor) -> dict:
+    result = service.confirm(session, receipt_id, performed_by=actor.user_id)
     return success_response("Goods receipt confirmed", result.model_dump(mode="json"))
 
 
-@router.post("/{receipt_id}/cancel")
+@router.post(
+    "/{receipt_id}/cancel", dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))]
+)
 def cancel_receipt(receipt_id: ReceiptId, session: Db) -> dict:
     result = service.cancel(session, receipt_id)
     return success_response("Goods receipt cancelled", result.model_dump(mode="json"))

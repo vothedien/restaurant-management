@@ -15,6 +15,8 @@ from app.modules.inventory.schemas import (
     UnitCreate,
 )
 from app.modules.inventory.service import InventoryService
+from app.modules.inventory_auth.dependencies import get_current_inventory_user
+from tests.inventory_auth_fixtures import unit_test_principal
 
 
 class FakeSession:
@@ -128,6 +130,7 @@ def inventory_client(
 
     monkeypatch.setattr(inventory_router, "service", service)
     client.app.dependency_overrides[get_db] = override_get_db
+    client.app.dependency_overrides[get_current_inventory_user] = unit_test_principal
     yield client
     client.app.dependency_overrides.clear()
 

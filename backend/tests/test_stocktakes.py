@@ -438,7 +438,9 @@ def test_count_item_must_belong_to_requested_stocktake(stock_client, stock_sessi
 
 
 def test_missing_actor_duplicate_number_and_missing_stocktake(stock_client, stocktake_lots):
-    assert stock_client.post(BASE, json={"created_by": 999}).status_code == 404
+    forged = stock_client.post(BASE, json={"created_by": 999})
+    assert forged.status_code == 201
+    assert forged.json()["data"]["created_by"] == 1
     assert (
         stock_client.post(BASE, json={"created_by": 1, "stocktake_number": "COUNT-ONE"}).status_code
         == 201

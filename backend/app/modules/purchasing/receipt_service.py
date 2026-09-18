@@ -196,7 +196,9 @@ class GoodsReceiptService:
             result = self.read(session, receipt)
         return result
 
-    def confirm(self, session: Session, receipt_id: int) -> GoodsReceiptRead:
+    def confirm(
+        self, session: Session, receipt_id: int, *, performed_by: int | None = None
+    ) -> GoodsReceiptRead:
         with transaction(session):
             order, receipt = self.lock_receipt(session, receipt_id)
             if receipt.status == "CONFIRMED":
@@ -205,6 +207,8 @@ class GoodsReceiptService:
                 raise ConflictError("Only draft goods receipts can be confirmed")
             self.require_receivable(order)
             require_actor(session, receipt.received_by)
+            if performed_by is not None:
+                require_actor(session, performed_by)
             items = self.repository.items(session, receipt_id)
             for item in items:
                 if not item.lot_code:
@@ -246,7 +250,7 @@ class GoodsReceiptService:
                     movement_type="RECEIPT",
                     direction="IN",
                     quantity=item.base_quantity,
-                    performed_by=receipt.received_by,
+                    performed_by=performed_by if performed_by is not None else receipt.received_by,
                     goods_receipt_item_id=item.goods_receipt_item_id,
                     reason=f"Goods receipt {receipt.receipt_number}",
                 )

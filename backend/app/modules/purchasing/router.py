@@ -5,6 +5,10 @@ from sqlalchemy.orm import Session
 
 from app.core.responses import success_response
 from app.db.session import get_db
+from app.modules.inventory_auth.dependencies import (
+    require_inventory_permission,
+)
+from app.modules.inventory_auth.service import PURCHASE_READ_PERMISSIONS
 from app.modules.purchasing.order_router import router as order_router
 from app.modules.purchasing.receipt_router import router as receipt_router
 from app.modules.purchasing.schemas import (
@@ -27,7 +31,9 @@ service = PurchasingService()
 ResourceId = Annotated[int, Path(gt=0, le=MAX_BIGINT)]
 
 
-@router.get("/suppliers")
+@router.get(
+    "/suppliers", dependencies=[Depends(require_inventory_permission(*PURCHASE_READ_PERMISSIONS))]
+)
 def list_suppliers(
     session: Annotated[Session, Depends(get_db)],
     search: str | None = Query(default=None, max_length=180),
@@ -46,7 +52,10 @@ def list_suppliers(
     return success_response("Suppliers retrieved", data.model_dump(mode="json"))
 
 
-@router.get("/suppliers/{supplier_id}")
+@router.get(
+    "/suppliers/{supplier_id}",
+    dependencies=[Depends(require_inventory_permission(*PURCHASE_READ_PERMISSIONS))],
+)
 def get_supplier(
     supplier_id: ResourceId, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -54,7 +63,11 @@ def get_supplier(
     return success_response("Supplier retrieved", supplier.model_dump(mode="json"))
 
 
-@router.post("/suppliers", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/suppliers",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_inventory_permission("PURCHASE_MANAGE"))],
+)
 def create_supplier(
     data: SupplierCreate, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -62,7 +75,10 @@ def create_supplier(
     return success_response("Supplier created", supplier.model_dump(mode="json"))
 
 
-@router.patch("/suppliers/{supplier_id}")
+@router.patch(
+    "/suppliers/{supplier_id}",
+    dependencies=[Depends(require_inventory_permission("PURCHASE_MANAGE"))],
+)
 def update_supplier(
     supplier_id: ResourceId,
     data: SupplierUpdate,
@@ -72,7 +88,10 @@ def update_supplier(
     return success_response("Supplier updated", supplier.model_dump(mode="json"))
 
 
-@router.delete("/suppliers/{supplier_id}")
+@router.delete(
+    "/suppliers/{supplier_id}",
+    dependencies=[Depends(require_inventory_permission("PURCHASE_MANAGE"))],
+)
 def delete_supplier(
     supplier_id: ResourceId, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -80,7 +99,10 @@ def delete_supplier(
     return success_response("Supplier deactivated", supplier.model_dump(mode="json"))
 
 
-@router.get("/supplier-ingredients")
+@router.get(
+    "/supplier-ingredients",
+    dependencies=[Depends(require_inventory_permission(*PURCHASE_READ_PERMISSIONS))],
+)
 def list_supplier_ingredients(
     session: Annotated[Session, Depends(get_db)],
     supplier_id: int | None = Query(default=None, gt=0, le=MAX_BIGINT),
@@ -103,7 +125,10 @@ def list_supplier_ingredients(
     return success_response("Supplier ingredients retrieved", data.model_dump(mode="json"))
 
 
-@router.get("/supplier-ingredients/{supplier_ingredient_id}")
+@router.get(
+    "/supplier-ingredients/{supplier_ingredient_id}",
+    dependencies=[Depends(require_inventory_permission(*PURCHASE_READ_PERMISSIONS))],
+)
 def get_supplier_ingredient(
     supplier_ingredient_id: ResourceId, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -111,7 +136,11 @@ def get_supplier_ingredient(
     return success_response("Supplier ingredient retrieved", mapping.model_dump(mode="json"))
 
 
-@router.post("/supplier-ingredients", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/supplier-ingredients",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_inventory_permission("PURCHASE_MANAGE"))],
+)
 def create_supplier_ingredient(
     data: SupplierIngredientCreate, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -119,7 +148,10 @@ def create_supplier_ingredient(
     return success_response("Supplier ingredient created", mapping.model_dump(mode="json"))
 
 
-@router.patch("/supplier-ingredients/{supplier_ingredient_id}")
+@router.patch(
+    "/supplier-ingredients/{supplier_ingredient_id}",
+    dependencies=[Depends(require_inventory_permission("PURCHASE_MANAGE"))],
+)
 def update_supplier_ingredient(
     supplier_ingredient_id: ResourceId,
     data: SupplierIngredientUpdate,
@@ -129,7 +161,10 @@ def update_supplier_ingredient(
     return success_response("Supplier ingredient updated", mapping.model_dump(mode="json"))
 
 
-@router.delete("/supplier-ingredients/{supplier_ingredient_id}")
+@router.delete(
+    "/supplier-ingredients/{supplier_ingredient_id}",
+    dependencies=[Depends(require_inventory_permission("PURCHASE_MANAGE"))],
+)
 def delete_supplier_ingredient(
     supplier_ingredient_id: ResourceId, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:

@@ -1,0 +1,33 @@
+.inv-operation-picker { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(180px, 2fr); gap: 12px; margin-bottom: 16px; }
+.inv-operation-picker > .inv-error, .inv-operation-picker > nav { grid-column: 1 / -1; }
+.inv-operation-notice { padding: 14px 16px; border: 1px solid #c6d7d0; border-left: 4px solid #24745e; background: #f3f8f5; border-radius: 8px; margin: 12px 0; }
+.inv-operation-warning { border-color: #e3c786; border-left-color: #a36912; background: #fff9ea; }
+.inv-operation-error { color: #9b2525; font-size: .875rem; }
+.inv-count-progress { width: 100%; height: 10px; accent-color: #18624d; margin: 10px 0 18px; }
+.inv-count-summary { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 16px 0; }
+.inv-count-summary > span { display: flex; gap: 8px; align-items: baseline; }
+.inv-count-summary strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.inv-count-input { min-width: 108px; max-width: 160px; font-size: 1.1rem !important; min-height: 44px; }
+.inv-count-reason { min-width: 170px; max-width: 260px; }
+.inv-count-mobile { display: none; }
+.inv-count-card { border: 1px solid #d6e0da; padding: 20px; border-radius: 10px; }
+.inv-count-card h2 { margin: 0 0 8px; }
+.inv-count-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.inv-count-card dd { margin: 0; font-weight: 600; text-align: right; }
+.inv-count-sticky { position: sticky; bottom: 0; z-index: 2; border-top: 1px solid #d6e0da; background: #fff; padding: 14px 0; margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.inv-count-state { white-space: nowrap; font-size: .85rem; font-weight: 600; }
+.inv-count-state.matched { color: #176147; }
+.inv-count-state.difference { color: #9a5910; }
+.inv-count-state.uncounted { color: #5c6860; }
+.inv-operation-result { overflow-wrap: anywhere; }
+.inv-operation-result ul { padding-left: 24px; }
+.inv-operations-page .inv-operation-notice { overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .inv-operation-picker { grid-template-columns: 1fr; }
+  .inv-count-desktop { display: none; }
+  .inv-count-mobile { display: block; }
+  .inv-count-input { max-width: none; width: 100%; font-size: 1.45rem !important; min-height: 52px; }
+  .inv-count-reason { max-width: none; width: 100%; }
+  .inv-count-sticky { padding: 12px; margin-left: -12px; margin-right: -12px; }
+  .inv-count-sticky .inv-button { flex: 1; }
+}

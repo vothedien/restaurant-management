@@ -31,6 +31,8 @@ from app.db.models.catalog import (
 )
 from app.db.models.rbac import User
 from app.db.session import get_db
+from app.modules.inventory_auth.dependencies import get_current_inventory_user
+from tests.inventory_auth_fixtures import unit_test_principal
 
 PREFIX = "/api/v1/recipes"
 
@@ -78,6 +80,15 @@ def recipe_engine() -> Generator[Engine, None, None]:
 @pytest.fixture
 def recipe_session(recipe_engine: Engine) -> Generator[Session, None, None]:
     with Session(recipe_engine, autoflush=False) as session:
+        session.add(
+            User(
+                user_id=1,
+                username="recipe-test",
+                full_name="Recipe test",
+                password_hash="unused-service-fixture",
+                status="ACTIVE",
+            )
+        )
         session.add(MenuCategory(category_id=1, category_code="FOOD", category_name="Food"))
         session.add_all(
             Unit(
@@ -146,6 +157,7 @@ def recipe_client(
     monkeypatch.setattr(main_module, "get_settings", lambda: settings)
     app = main_module.create_app()
     app.dependency_overrides[get_db] = lambda: recipe_session
+    app.dependency_overrides[get_current_inventory_user] = unit_test_principal
     with TestClient(app) as client:
         yield client
 
@@ -374,7 +386,7 @@ def test_recipe_create_uses_next_version_and_server_owned_fields(recipe_client, 
     data = response.json()["data"]
     assert data["version_no"] == 5
     assert data["status"] == "DRAFT"
-    assert data["created_by"] is None
+    assert data["created_by"] == 1
     assert data["notes"] == "New version"
     assert data["items"] == []
     second = recipe_client.post(PREFIX, json={"dish_id": 1})

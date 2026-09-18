@@ -32,7 +32,7 @@ DDL không khai báo unique cho `stock_movements.movement_number`; ORM trước 
 - Số lượng/giá nên gửi bằng chuỗi JSON để giữ Decimal. Số lượng cơ sở có tối đa 3 chữ số thập phân (`NUMERIC(14,3)`); giá mua 2 số (`14,2`), giá cơ sở lô 4 số (`14,4`). Giá do người lập cung cấp, không tự lấy giá demo hoặc `latest_unit_price`.
 - Mua/nhập kho và xuất thủ công từ chối phép quy đổi không biểu diễn chính xác tới `0.001`, cũng như tràn precision. Tiền/giá cơ sở dùng `ROUND_HALF_UP`. Công thức đã có quy tắc riêng: làm tròn định lượng cơ sở tới `0.001` khi lưu recipe item; E giữ nguyên snapshot đó.
 - Mapping nhà cung cấp có thể mô tả đơn vị đóng gói bằng hệ số riêng, ví dụ BOX → gram; không tự suy ra hệ số từ tên đơn vị. Xuất thủ công dùng đúng đơn vị cơ sở hoặc conversion trực tiếp cùng dimension, không tự đảo conversion hoặc dò chuỗi chuyển đổi.
-- Ứng dụng hiện chưa có dependency xác thực/phân quyền cho các route này. `created_by`, `actor_id`, `received_by`, `performed_by`, `completed_by` kiểm tra user tồn tại và ACTIVE; **đó là kiểm tra FK/nghiệp vụ, không phải phân quyền**. Không viết lại RBAC của Người 1.
+- Cập nhật Inventory Auth: các router nghiệp vụ yêu cầu Bearer JWT riêng và permission phù hợp. Actor legacy trong body bị router ghi đè bằng user đã xác thực. Service nội bộ giữ kiểm tra FK/trạng thái cho caller như Sales. Xem [Inventory Auth](inventory-auth.md).
 
 `Ingredient.base_unit_id` không được đổi khi đã có recipe item, supplier mapping, lô hoặc lịch sử kho tham chiếu. Cập nhật nguyên liệu và chuẩn bị recipe item cùng khóa nguyên liệu theo ID tăng dần, tránh race đổi đơn vị cơ sở trong lúc lưu định lượng. `Unit.dimension` bất biến sau khi tạo; cần dimension khác thì tạo đơn vị mới.
 
@@ -53,7 +53,7 @@ Các đường dẫn dưới đây tương đối với `backend/`; mỗi nhóm 
 | Test | `tests/conftest.py`, `stock_fixtures.py`, `test_purchase_orders.py`, `test_goods_receipts.py`, `test_stock.py`, `test_stocktakes.py`, `test_consumption.py`, `test_workflow_demo.py` |
 | Tài liệu | `README.md`, `docs/inventory-workflows.md` |
 
-Không thay đổi frontend, module Sales/auth/catalog, DDL gốc hay Alembic. Các sửa đổi vẫn chưa commit trên nhánh `feature/purchasing-stock-workflows` để người dùng xem diff.
+Lịch sử đợt workflow trước: Không thay đổi frontend, module Sales/auth/catalog, DDL gốc hay Alembic. Các sửa đổi vẫn chưa commit trên nhánh `feature/purchasing-stock-workflows` để người dùng xem diff.
 
 ## A. Đơn mua hàng
 

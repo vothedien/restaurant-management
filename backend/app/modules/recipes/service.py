@@ -56,7 +56,9 @@ class RecipesService:
                 raise NotFoundError("No active recipe is currently effective for this dish")
             return self._detail(session, recipe)
 
-    def create_recipe(self, session: Session, data: RecipeCreate) -> RecipeDetail:
+    def create_recipe(
+        self, session: Session, data: RecipeCreate, *, created_by: int | None = None
+    ) -> RecipeDetail:
         with self._transaction(session):
             # Lock the parent even when it has no versions yet. All creation and
             # activation requests for the same dish acquire this lock first.
@@ -66,7 +68,7 @@ class RecipesService:
             if version_no > 2_147_483_647:
                 raise ConflictError("Recipe version number limit reached")
             recipe = RecipeVersion(
-                **data.model_dump(), version_no=version_no, status="DRAFT", created_by=None
+                **data.model_dump(), version_no=version_no, status="DRAFT", created_by=created_by
             )
             self.repository.add(session, recipe)
             session.flush()
