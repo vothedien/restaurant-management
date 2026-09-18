@@ -1,0 +1,9 @@
+import type { LotContext, OperationBalance, OperationConversion, OperationIngredient, OperationLot, OperationPage, StocktakeDetail } from '../types/operations';
+
+export const operationIngredient: OperationIngredient = { ingredient_id: 1, ingredient_code: 'FLOUR', ingredient_name: 'Bột mì', base_unit_id: 1, status: 'ACTIVE', base_unit: { unit_id: 1, unit_code: 'G', unit_name: 'Gram', dimension: 'MASS', is_active: true } };
+export const operationLot: OperationLot = { stock_lot_id: 201, ingredient_id: 1, lot_code: 'FLOUR-01', goods_receipt_item_id: 21, manufacture_date: null, expiry_date: '2027-01-20', received_quantity: '100.000', current_quantity: '50.000', unit_cost: '1.0000', status: 'ACTIVE', created_at: '2026-09-01T00:00:00Z' };
+export const operationBalance: OperationBalance = { ingredient_id: 1, ingredient_code: 'FLOUR', ingredient_name: 'Bột mì', base_unit_id: 1, current_quantity: '50.000', available_quantity: '50.000', unavailable_quantity: '0.000' };
+export const operationConversion: OperationConversion = { conversion_id: 1, from_unit_id: 2, to_unit_id: 1, factor: '1000.000000', from_unit: { unit_id: 2, unit_code: 'KG', unit_name: 'Kilogram', dimension: 'MASS', is_active: true }, to_unit: operationIngredient.base_unit };
+export const operationContext: Record<number, LotContext> = { 201: { ingredient: operationIngredient, lot: operationLot } };
+export const operationPage = <T,>(items: T[], total = items.length, offset = 0): OperationPage<T> => ({ items, total, limit: 20, offset });
+export const stocktakeDocument: StocktakeDetail = { stocktake_id: 7, stocktake_number: 'STK-TEST', status: 'IN_PROGRESS', created_by: 1, completed_by: null, created_at: '2026-09-15T08:00:00Z', started_at: '2026-09-15T08:01:00Z', completed_at: null, notes: null, items: [{ stocktake_item_id: 71, stocktake_id: 7, stock_lot_id: 201, system_quantity: '50.000', actual_quantity: '50.000', variance_quantity: '0.000', adjustment_reason: null, counted: false }] };

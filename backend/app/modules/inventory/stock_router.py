@@ -8,6 +8,11 @@ from app.core.responses import success_response
 from app.db.session import get_db
 from app.modules.inventory.stock_schemas import LotStatus, MovementType, StockAdjustment, StockIssue
 from app.modules.inventory.stock_service import StockService
+from app.modules.inventory_auth.dependencies import (
+    InventoryActor,
+    require_inventory_permission,
+)
+from app.modules.inventory_auth.service import STOCK_READ_PERMISSIONS
 
 router = APIRouter(tags=["stock"])
 service = StockService()
@@ -27,7 +32,7 @@ def page(message, rows, total, limit, offset):
     )
 
 
-@router.get("/stock")
+@router.get("/stock", dependencies=[Depends(require_inventory_permission(*STOCK_READ_PERMISSIONS))])
 def balances(
     session: Db,
     ingredient_id: int | None = Query(None, gt=0, le=9223372036854775807),
@@ -40,7 +45,9 @@ def balances(
     return page("Stock balances retrieved", rows, total, limit, offset)
 
 
-@router.get("/stock-lots")
+@router.get(
+    "/stock-lots", dependencies=[Depends(require_inventory_permission(*STOCK_READ_PERMISSIONS))]
+)
 def lots(
     session: Db,
     ingredient_id: int | None = Query(None, gt=0, le=9223372036854775807),
@@ -60,14 +67,20 @@ def lots(
     return page("Stock lots retrieved", rows, total, limit, offset)
 
 
-@router.get("/stock-lots/{lot_id}")
+@router.get(
+    "/stock-lots/{lot_id}",
+    dependencies=[Depends(require_inventory_permission(*STOCK_READ_PERMISSIONS))],
+)
 def lot(lot_id: ResourceId, session: Db):
     return success_response(
         "Stock lot retrieved", service.get_lot(session, lot_id).model_dump(mode="json")
     )
 
 
-@router.get("/stock-movements")
+@router.get(
+    "/stock-movements",
+    dependencies=[Depends(require_inventory_permission(*STOCK_READ_PERMISSIONS))],
+)
 def movements(
     session: Db,
     ingredient_id: int | None = Query(None, gt=0, le=9223372036854775807),
@@ -91,13 +104,22 @@ def movements(
     return page("Stock movements retrieved", rows, total, limit, offset)
 
 
-@router.post("/stock/issues", status_code=201)
-def issue(data: StockIssue, session: Db):
+@router.post(
+    "/stock/issues",
+    status_code=201,
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
+def issue(data: StockIssue, session: Db, actor: InventoryActor):
+    data = data.model_copy(update={"performed_by": actor.user_id})
     return success_response("Stock issued", service.issue(session, data).model_dump(mode="json"))
 
 
-@router.post("/stock-lots/{lot_id}/adjust")
-def adjust(lot_id: ResourceId, data: StockAdjustment, session: Db):
+@router.post(
+    "/stock-lots/{lot_id}/adjust",
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
+def adjust(lot_id: ResourceId, data: StockAdjustment, session: Db, actor: InventoryActor):
+    data = data.model_copy(update={"performed_by": actor.user_id})
     return success_response(
         "Stock adjusted", service.adjust(session, lot_id, data).model_dump(mode="json")
     )

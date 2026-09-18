@@ -23,6 +23,8 @@ from app.core.config import Settings
 from app.db.models.catalog import Ingredient, Unit
 from app.db.models.inventory import Supplier, SupplierIngredient
 from app.db.session import get_db
+from app.modules.inventory_auth.dependencies import get_current_inventory_user
+from tests.inventory_auth_fixtures import unit_test_principal
 
 SUPPLIERS = "/api/v1/purchasing/suppliers"
 MAPPINGS = "/api/v1/purchasing/supplier-ingredients"
@@ -123,6 +125,7 @@ def purchasing_client(
     monkeypatch.setattr(main_module, "get_settings", lambda: settings)
     app = main_module.create_app()
     app.dependency_overrides[get_db] = lambda: purchasing_session
+    app.dependency_overrides[get_current_inventory_user] = unit_test_principal
     with TestClient(app) as client:
         yield client
 

@@ -83,8 +83,8 @@ def stock_now(session: Session) -> datetime:
 
 
 def require_actor(session: Session, user_id: int | None) -> User | None:
-    # There is no authentication dependency in the existing application yet.
-    # This validates the FK only; it must not be presented as authorization.
+    # Routers supply the authenticated Inventory actor; internal callers such
+    # as Sales consumption still use this FK/status check without an HTTP session.
     if user_id is None:
         return None
     actor = session.get(User, user_id)

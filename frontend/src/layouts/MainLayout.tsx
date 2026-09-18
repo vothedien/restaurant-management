@@ -9,7 +9,7 @@ export function MainLayout() {
         <NavLink className="brand" to="/">Restaurant Management</NavLink>
         <nav aria-label="Main navigation">
           <NavLink to="/sales">Sales</NavLink>
-          <NavLink to="/inventory">Inventory</NavLink>
+          <NavLink to="/inventory">Kho hàng</NavLink>
           <NavLink to="/login">Login</NavLink>
         </nav>
       </header>

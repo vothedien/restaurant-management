@@ -35,6 +35,7 @@ from app.db.models.inventory import (
 from app.db.models.rbac import User
 from app.db.models.sales import Order, OrderItem
 from app.db.session import get_db
+from tests.inventory_auth_fixtures import add_rbac_tables, authenticate_client, seed_inventory_users
 
 
 def workflow_metadata() -> MetaData:
@@ -87,6 +88,7 @@ def workflow_metadata() -> MetaData:
         unique=True,
         sqlite_where=recipes.c.status == "ACTIVE",
     )
+    add_rbac_tables(metadata)
     return metadata
 
 
@@ -149,6 +151,7 @@ def stock_session(stock_engine):
             for i in (1, 2)
         )
         session.commit()
+        seed_inventory_users(session)
         yield session
 
 
@@ -159,4 +162,5 @@ def stock_client(stock_session, monkeypatch):
     app = main_module.create_app()
     app.dependency_overrides[get_db] = lambda: stock_session
     with TestClient(app) as client:
+        authenticate_client(client)
         yield client

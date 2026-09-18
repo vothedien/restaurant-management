@@ -156,7 +156,9 @@ def test_invalid_inputs(stock_client, changes):
 
 def test_missing_references_minimum_and_duplicate_mapping(stock_client):
     assert stock_client.post(ORDERS, json=order_payload(supplier_id=999)).status_code == 404
-    assert stock_client.post(ORDERS, json=order_payload(created_by=999)).status_code == 404
+    forged = stock_client.post(ORDERS, json=order_payload(created_by=999))
+    assert forged.status_code == 201
+    assert forged.json()["data"]["created_by"] == 1
     line = {"supplier_ingredient_id": 1, "ordered_quantity": "0.5", "expected_unit_price": "1"}
     assert stock_client.post(ORDERS, json=order_payload(items=[line])).status_code == 400
     line["ordered_quantity"] = "1"

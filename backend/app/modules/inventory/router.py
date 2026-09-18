@@ -24,6 +24,10 @@ from app.modules.inventory.schemas import (
 from app.modules.inventory.service import InventoryService
 from app.modules.inventory.stock_router import router as stock_router
 from app.modules.inventory.stocktake_router import router as stocktake_router
+from app.modules.inventory_auth.dependencies import (
+    require_inventory_access,
+    require_inventory_permission,
+)
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 router.include_router(stock_router)
@@ -43,7 +47,7 @@ def _ingredient_data(ingredient: object) -> dict[str, object]:
     return IngredientRead.model_validate(ingredient).model_dump(mode="json")
 
 
-@router.get("/units")
+@router.get("/units", dependencies=[Depends(require_inventory_access)])
 def list_units(
     session: Annotated[Session, Depends(get_db)],
     limit: int = Query(default=20, ge=1, le=100),
@@ -62,33 +66,41 @@ def list_units(
     return success_response("Units retrieved", data.model_dump(mode="json"))
 
 
-@router.get("/units/{unit_id}")
+@router.get("/units/{unit_id}", dependencies=[Depends(require_inventory_access)])
 def get_unit(session: Annotated[Session, Depends(get_db)], unit_id: int) -> dict[str, object]:
     return success_response("Unit retrieved", _unit_data(service.get_unit(session, unit_id)))
 
 
-@router.post("/units", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/units",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def create_unit(
     data: UnitCreate, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
     return success_response("Unit created", _unit_data(service.create_unit(session, data)))
 
 
-@router.patch("/units/{unit_id}")
+@router.patch(
+    "/units/{unit_id}", dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))]
+)
 def update_unit(
     unit_id: int, data: UnitUpdate, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
     return success_response("Unit updated", _unit_data(service.update_unit(session, unit_id, data)))
 
 
-@router.delete("/units/{unit_id}")
+@router.delete(
+    "/units/{unit_id}", dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))]
+)
 def delete_unit(session: Annotated[Session, Depends(get_db)], unit_id: int) -> dict[str, object]:
     return success_response(
         "Unit deactivated", _unit_data(service.deactivate_unit(session, unit_id))
     )
 
 
-@router.get("/unit-conversions")
+@router.get("/unit-conversions", dependencies=[Depends(require_inventory_access)])
 def list_conversions(
     session: Annotated[Session, Depends(get_db)],
     limit: int = Query(default=20, ge=1, le=100),
@@ -104,7 +116,7 @@ def list_conversions(
     return success_response("Unit conversions retrieved", data.model_dump(mode="json"))
 
 
-@router.get("/unit-conversions/{conversion_id}")
+@router.get("/unit-conversions/{conversion_id}", dependencies=[Depends(require_inventory_access)])
 def get_conversion(
     session: Annotated[Session, Depends(get_db)], conversion_id: int
 ) -> dict[str, object]:
@@ -114,7 +126,11 @@ def get_conversion(
     )
 
 
-@router.post("/unit-conversions", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/unit-conversions",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def create_conversion(
     data: UnitConversionCreate, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -123,7 +139,10 @@ def create_conversion(
     )
 
 
-@router.patch("/unit-conversions/{conversion_id}")
+@router.patch(
+    "/unit-conversions/{conversion_id}",
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def update_conversion(
     conversion_id: int,
     data: UnitConversionUpdate,
@@ -135,7 +154,10 @@ def update_conversion(
     )
 
 
-@router.delete("/unit-conversions/{conversion_id}")
+@router.delete(
+    "/unit-conversions/{conversion_id}",
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def delete_conversion(
     session: Annotated[Session, Depends(get_db)], conversion_id: int
 ) -> JSONResponse:
@@ -145,7 +167,7 @@ def delete_conversion(
     )
 
 
-@router.get("/ingredients")
+@router.get("/ingredients", dependencies=[Depends(require_inventory_access)])
 def list_ingredients(
     session: Annotated[Session, Depends(get_db)],
     limit: int = Query(default=20, ge=1, le=100),
@@ -169,7 +191,7 @@ def list_ingredients(
     return success_response("Ingredients retrieved", data.model_dump(mode="json"))
 
 
-@router.get("/ingredients/{ingredient_id}")
+@router.get("/ingredients/{ingredient_id}", dependencies=[Depends(require_inventory_access)])
 def get_ingredient(
     session: Annotated[Session, Depends(get_db)], ingredient_id: int
 ) -> dict[str, object]:
@@ -179,7 +201,11 @@ def get_ingredient(
     )
 
 
-@router.post("/ingredients", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/ingredients",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def create_ingredient(
     data: IngredientCreate, session: Annotated[Session, Depends(get_db)]
 ) -> dict[str, object]:
@@ -188,7 +214,10 @@ def create_ingredient(
     )
 
 
-@router.patch("/ingredients/{ingredient_id}")
+@router.patch(
+    "/ingredients/{ingredient_id}",
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def update_ingredient(
     ingredient_id: int,
     data: IngredientUpdate,
@@ -200,7 +229,10 @@ def update_ingredient(
     )
 
 
-@router.delete("/ingredients/{ingredient_id}")
+@router.delete(
+    "/ingredients/{ingredient_id}",
+    dependencies=[Depends(require_inventory_permission("INVENTORY_MANAGE"))],
+)
 def delete_ingredient(
     session: Annotated[Session, Depends(get_db)], ingredient_id: int
 ) -> dict[str, object]:

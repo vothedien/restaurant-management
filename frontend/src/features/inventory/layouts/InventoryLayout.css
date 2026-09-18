@@ -1,0 +1,31 @@
+.inventory.inv-workspace { max-width: 1600px; margin: 0 auto; min-height: 100vh; padding: 0 24px; }
+.inv-topbar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--inv-border); }
+.inv-brand { display: inline-flex; align-items: center; gap: 12px; color: #174e3b; font-weight: 750; font-size: 18px; }
+.inv-user-menu { display: flex; align-items: center; gap: 18px; }
+.inv-user-menu strong, .inv-user-menu span { display: block; overflow-wrap: anywhere; }
+.inv-user-menu span { color: var(--inv-muted); font-size: 12px; margin-top: 3px; }
+.inventory .inv-menu-toggle { display: none; }
+.inv-current-actor { display: grid; gap: 5px; padding: 12px 14px; border: 1px solid var(--inv-border); border-radius: 7px; background: #f5f8f6; }
+.inv-current-actor strong { overflow-wrap: anywhere; }
+.inv-skip-link { position: absolute; left: 24px; top: -100px; padding: 12px; background: white; z-index: 10; }
+.inv-skip-link:focus { top: 10px; }
+.inventory.inv-auth-shell { display: grid; grid-template-columns: minmax(0, 440px); align-content: center; justify-content: center; min-height: 100vh; padding: 24px; }
+.inv-login-card { background: white; border: 1px solid var(--inv-border); border-radius: 12px; padding: 30px; }
+.inv-auth-brand { color: var(--inv-green); font-weight: 750; }
+.inv-login-card h1 { font-size: 25px; margin: 20px 0 8px; }
+.inv-login-card form { margin-top: 24px; }
+.inv-forbidden { margin-top: 24px; max-width: 720px; }
+.inv-forbidden h1 { font-size: 25px; }
+@media (max-width: 760px) {
+  .inventory.inv-workspace { display: block; padding: 0 14px; }
+  .inv-topbar { flex-wrap: wrap; gap: 14px; padding: 16px 0; }
+  .inv-brand { flex: 1; font-size: 17px; }
+  .inv-user-menu { flex: 1 1 100%; order: 3; justify-content: space-between; gap: 10px; }
+  .inv-user-menu strong { font-size: 13px; }
+  .inventory .inv-menu-toggle { display: inline-flex; }
+  .inv-workspace .inv-sidebar[data-open=true] { display: block; border-right: 0; border-bottom: 1px solid var(--inv-border); padding: 0 0 16px; }
+  .inv-workspace .inv-sidebar a { min-height: 44px; }
+  .inv-login-card { padding: 24px 18px; }
+  .inventory.inv-auth-shell { padding: 16px; }
+}
+@media print { .inv-topbar, .inv-skip-link { display: none !important; } .inventory.inv-workspace { display: block; padding: 0; } }
